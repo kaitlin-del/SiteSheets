@@ -7,7 +7,7 @@ import folium
 from streamlit_folium import st_folium
 
 # --- CONFIG ---
-WHAT3WORDS_API_KEY = "YOUR_W3W_API_KEY"  #61WM1GK9
+WHAT3WORDS_API_KEY = "61WM1GK9"  #61WM1GK9
 
 # --- FUNCTIONS ---
 def convert_to_easting_northing(lat, lon):
@@ -16,7 +16,7 @@ def convert_to_easting_northing(lat, lon):
     return round(easting), round(northing)
 
 def get_what3words(lat, lon):
-    url = f"https://api.what3words.com/v3/convert-to-3wa?coordinates={lat},{lon}&key={WHAT3WORDS_API_KEY}"
+    url = f"https://api.what3words.com/v3/convert-to-3wa?coordinates={lat},{lon}&key={61WM1GK9}"
     res = requests.get(url).json()
     return res.get("words", "Not found")
 
