@@ -16,7 +16,7 @@ def convert_to_easting_northing(lat, lon):
     return round(easting), round(northing)
 
 def get_what3words(lat, lon):
-    url = f"https://api.what3words.com/v3/convert-to-3wa?coordinates={lat},{lon}&key={61WM1GK9}"
+    url = f"https://api.what3words.com/v3/convert-to-3wa?coordinates={lat},{lon}&key={YOUR_W3W_API_KEY}"
     res = requests.get(url).json()
     return res.get("words", "Not found")
 
