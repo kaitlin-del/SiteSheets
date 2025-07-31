@@ -7,7 +7,7 @@ import folium
 from streamlit_folium import st_folium
 
 # --- CONFIG ---
-WHAT3WORDS_API_KEY = "61WM1GK9"  #61WM1GK9
+WHAT3WORDS_API_KEY = "YOUR_W3W_API_KEY"  #61WM1GK9
 
 # --- FUNCTIONS ---
 def convert_to_easting_northing(lat, lon):
