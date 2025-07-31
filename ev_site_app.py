@@ -99,7 +99,7 @@ with tab2:
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
     fast_kw = st.number_input("Fast kW (Batch)", value=22, key="fast_batch")
-    rapid_kw = st.number_input("Rapid kW (Batch)", value=50, key="rapid_batch")
+    rapid_kw = st.number_input("Rapid kW (Batch)", value=60, key="rapid_batch")
     ultra_kw = st.number_input("Ultra-Rapid kW (Batch)", value=150, key="ultra_batch")
 
     if uploaded_file:
