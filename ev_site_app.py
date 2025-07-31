@@ -52,7 +52,7 @@ with tab1:
 
     st.subheader("⚡ Charger Configuration")
     fast_kw = st.number_input("Fast kW (Default 22)", value=22)
-    rapid_kw = st.number_input("Rapid kW (Default 50)", value=50)
+    rapid_kw = st.number_input("Rapid kW (Default 60)", value=60)
     ultra_kw = st.number_input("Ultra-Rapid kW (Default 150)", value=150)
 
     fast = st.number_input("Fast Chargers", 0, 20, 0)
