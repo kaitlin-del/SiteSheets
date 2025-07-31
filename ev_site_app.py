@@ -40,8 +40,8 @@ def calculate_kva(fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw):
 
 # --- STREAMLIT APP ---
 
-st.set_page_config(page_title="EV Charger Site Evaluator", layout="wide")
-st.title("🔋⚡ EV Charger Site Evaluator")
+st.set_page_config(page_title="EV Charger Site Sheet Generator", layout="wide")
+st.title("🔋⚡ EV Charger Site Sheet Generator")
 
 tab1, tab2 = st.tabs(["Single Site", "Batch Upload"])
 
