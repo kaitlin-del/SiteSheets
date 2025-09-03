@@ -15,6 +15,10 @@ def convert_to_easting_northing(lat, lon):
     easting, northing = transformer.transform(lat, lon)
     return round(easting), round(northing)
 
+def get_what3words(lat, lon):
+    url = f"https://api.what3words.com/v3/convert-to-3wa?coordinates={lat},{lon}&key={61WM1GK9}"
+    res = requests.get(url).json()
+    return res.get("words", "Not found")
 
 def get_postcode_info(lat, lon):
     res = requests.get(f"https://api.postcodes.io/postcodes?lon={lon}&lat={lat}").json()
@@ -57,6 +61,7 @@ with tab1:
 
     if st.button("Process Site"):
         easting, northing = convert_to_easting_northing(lat, lon)
+        w3w = get_what3words(lat, lon)
         postcode, ward, district = get_postcode_info(lat, lon)
         street = get_street_name(lat, lon)
         kva = calculate_kva(fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw)
@@ -66,6 +71,7 @@ with tab1:
             "Longitude": lon,
             "Easting": easting,
             "Northing": northing,
+            "What3Words": w3w,
             "Postcode": postcode,
             "Ward": ward,
             "District": district,
@@ -104,6 +110,7 @@ with tab2:
             lat, lon = row["latitude"], row["longitude"]
             f, r, u = int(row.get("fast", 0)), int(row.get("rapid", 0)), int(row.get("ultra", 0))
             e, n = convert_to_easting_northing(lat, lon)
+            w3w = get_what3words(lat, lon)
             postcode, ward, district = get_postcode_info(lat, lon)
             street = get_street_name(lat, lon)
             kva = calculate_kva(f, r, u, fast_kw, rapid_kw, ultra_kw)
@@ -113,6 +120,7 @@ with tab2:
                 "Longitude": lon,
                 "Easting": e,
                 "Northing": n,
+                "What3Words": w3w,
                 "Postcode": postcode,
                 "Ward": ward,
                 "District": district,
