@@ -793,17 +793,17 @@ def create_batch_map(sites, show_traffic=False):
 # STREAMLIT APP
 # ==============================
 
-st.set_page_config(page_title="EV Charger Site Generator", page_icon="🔋", layout="wide")
+st.set_page_config(page_title="EV Site Selection Guide", page_icon="🔋", layout="wide")
 
 st.title("🔋 EV Site Selection Guide")
-st.markdown("*Comprehensive site analysis for EV charging infrastructure planning with competitor analysis*")
+st.markdown("*Comprehensive site guide for EV charging infrastructure planning*")
 
 # Sidebar
 with st.sidebar:
     st.header("⚙️ Settings")
     
     st.subheader("Charger Power Settings")
-    fast_kw = st.number_input("Fast Charger Power (kW)", value=22, min_value=1, max_value=200, help="Power rating for fast chargers. Note: please put 31kW for Etrel chargers")
+    fast_kw = st.number_input("Fast Charger Power (kW) Note: please put 31kW for Etrel chargers", value=22, min_value=1, max_value=200, help="Power rating for fast chargers")
     rapid_kw = st.number_input("Rapid Charger Power (kW)", value=60, min_value=1, max_value=350, help="Power rating for rapid chargers")
     ultra_kw = st.number_input("Ultra Rapid Charger Power (kW)", value=150, min_value=1, max_value=400, help="Power rating for ultra rapid chargers")
     
