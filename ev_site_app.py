@@ -803,8 +803,7 @@ with st.sidebar:
     st.header("⚙️ Settings")
     
     st.subheader("Charger Power Settings")
-    fast_kw = st.number_input("Fast Charger Power (kW) 
-    Note: please put 31kW for Etrel chargers", value=22, min_value=1, max_value=200, help="Power rating for fast chargers")
+    fast_kw = st.number_input("Fast Charger Power (kW), Please put 31kW for Etrel chargers", value=22, min_value=1, max_value=200, help="Power rating for fast chargers")
     rapid_kw = st.number_input("Rapid Charger Power (kW)", value=60, min_value=1, max_value=350, help="Power rating for rapid chargers")
     ultra_kw = st.number_input("Ultra Rapid Charger Power (kW)", value=150, min_value=1, max_value=400, help="Power rating for ultra rapid chargers")
     
