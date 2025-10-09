@@ -486,7 +486,7 @@ def convert_to_british_grid(lat, lon):
 def calculate_kva(fast, rapid, ultra, fast_kw=22, rapid_kw=60, ultra_kw=150):
     """Calculate required kVA capacity"""
     total_kw = fast * fast_kw + rapid * rapid_kw + ultra * ultra_kw
-    return round(total_kw / 0.9 * 1.1, 2)
+    return round(total_kw / 0.9, 2)
 
 def get_tomtom_traffic(lat, lon):
     """Get traffic information from TomTom API"""
