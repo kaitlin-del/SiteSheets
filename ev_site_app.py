@@ -795,7 +795,7 @@ def create_batch_map(sites, show_traffic=False):
 
 st.set_page_config(page_title="EV Charger Site Generator", page_icon="🔋", layout="wide")
 
-st.title("🔋 EV Charger Site Generator (CPO Edition)")
+st.title("🔋 EV Site Selection Guide")
 st.markdown("*Comprehensive site analysis for EV charging infrastructure planning with competitor analysis*")
 
 # Sidebar
@@ -1290,7 +1290,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #666;'>
-        <p>🔋 EV Charger Site Generator v3.0 | Built with Streamlit</p>
+        <p>🔋 EV Site Selection Guide v3.0 | Built with Streamlit</p>
         <p>Powered by Google Maps API (Roads, Places, Geocoding), TomTom Traffic API, and Postcodes.io</p>
         <p>✨ Now with EV competitor analysis and enhanced road information</p>
     </div>
