@@ -486,7 +486,7 @@ def convert_to_british_grid(lat, lon):
 def calculate_kva(fast, rapid, ultra, fast_kw=22, rapid_kw=60, ultra_kw=150):
     """Calculate required kVA capacity"""
     total_kw = fast * fast_kw + rapid * rapid_kw + ultra * ultra_kw
-    return round(total_kw / 0.9, 2)
+    return round(total_kw / 0.95, 2)
 
 def get_tomtom_traffic(lat, lon):
     """Get traffic information from TomTom API"""
@@ -803,7 +803,7 @@ with st.sidebar:
     st.header("⚙️ Settings")
     
     st.subheader("Charger Power Settings")
-    fast_kw = st.number_input("Fast Charger Power (kW)", value=22, min_value=1, max_value=200, help="Power rating for fast chargers")
+    fast_kw = st.number_input("Fast Charger Power (kW)", value=22, min_value=1, max_value=200, help="Power rating for fast chargers. Note: please put 31kW for Etrel chargers")
     rapid_kw = st.number_input("Rapid Charger Power (kW)", value=60, min_value=1, max_value=350, help="Power rating for rapid chargers")
     ultra_kw = st.number_input("Ultra Rapid Charger Power (kW)", value=150, min_value=1, max_value=400, help="Power rating for ultra rapid chargers")
     
