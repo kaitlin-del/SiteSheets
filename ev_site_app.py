@@ -1,59 +1,4 @@
-st.subheader("📥 Export Batch Results")
-        export_rows = []
-        for site in results:
-            export_rows.append({
-                "Latitude": site["latitude"], "Longitude": site["longitude"],
-                "Easting": site.get("easting", "N/A"), "Northing": site.get("northing", "N/A"),
-                "Elevation (m)": site.get("elevation", "N/A"),
-                "Postcode": site.get("postcode", "N/A"), 
-                "Address": site.get("formatted_address", "N/A"),
-                # Postcode.io comprehensive data
-                "Postcode Quality": site.get("postcode_quality", "N/A"),
-                "Postcode Eastings": site.get("postcode_eastings", "N/A"),
-                "Postcode Northings": site.get("postcode_northings", "N/A"),
-                "Postcode Country": site.get("postcode_country", "N/A"),
-                "NHS Health Authority": site.get("nhs_ha", "N/A"),
-                "Postcode Longitude": site.get("postcode_longitude", "N/A"),
-                "Postcode Latitude": site.get("postcode_latitude", "N/A"),
-                "European Electoral Region": site.get("european_electoral_region", "N/A"),
-                "Primary Care Trust": site.get("primary_care_trust", "N/A"),
-                "Postcode Region": site.get("postcode_region", "N/A"),
-                "LSOA": site.get("lsoa", "N/A"),
-                "MSOA": site.get("msoa", "N/A"),
-                "Incode": site.get("incode", "N/A"),
-                "Outcode": site.get("outcode", "N/A"),
-                "Parliamentary Constituency": site.get("parliamentary_constituency", "N/A"),
-                "Parliamentary Constituency 2024": site.get("parliamentary_constituency_2024", "N/A"),
-                "Admin District": site.get("admin_district", "N/A"),
-                "Parish": site.get("parish", "N/A"),
-                "Admin County": site.get("admin_county", "N/A"),
-                "Date of Introduction": site.get("date_of_introduction", "N/A"),
-                "Admin Ward": site.get("admin_ward", "N/A"),
-                "CED": site.get("ced", "N/A"),
-                "CCG": site.get("ccg", "N/A"),
-                "NUTS": site.get("nuts", "N/A"),
-                "PFA": site.get("pfa", "N/A"),
-                # Charger and site data
-                "Fast Chargers": site.get("fast_chargers", 0), 
-                "Rapid Chargers": site.get("rapid_chargers", 0),
-                "Ultra Chargers": site.get("ultra_chargers", 0), 
-                "Required kVA": site.get("required_kva", "N/A"),
-                "Road Name": site.get("snapped_road_name", "Unknown"), 
-                "Road Type": site.get("snapped_road_type", "Unknown"),
-                "Traffic Congestion": site.get("traffic_congestion", "N/A"),
-                "Competitor EV Count": site.get("competitor_ev_count", 0),
-                "Competitor Names": site.get("competitor_ev_names", "None"),
-                "Amenities Total": site.get("amenities_total", 0),
-                "Amenities Summary": site.get("amenities_summary", "N/A"),
-                "Google Maps Link": site.get("google_maps_link", ""),
-                "Street View Link": site.get("street_view_maps_link", ""),
-                "Aerial View Link": site.get("aerial_view_url", "")
-            })
-        
-        df_batch_export = pd.DataFrame(export_rows)
-        csv_batch = df_batch_export.to_csv(index=False).encode('utf-8')
-        st.download_button(label="📥 Download Batch Results as CSV", data=csv_batch,
-                          file_name="ev_batch_site_analysis.csv", mime="text/csv")import streamlit as st
+import streamlit as st
 import pandas as pd
 import requests
 import folium
@@ -216,47 +161,28 @@ def get_postcode_info(lat, lon):
         data = r.json()
         if data.get("status") == 200 and data["result"]:
             res = data["result"][0]
-            # Return comprehensive postcode data
             return {
                 "postcode": res.get("postcode", "N/A"),
-                "quality": res.get("quality", "N/A"),
-                "eastings": res.get("eastings", "N/A"),
-                "northings": res.get("northings", "N/A"),
-                "country": res.get("country", "N/A"),
-                "nhs_ha": res.get("nhs_ha", "N/A"),
-                "longitude": res.get("longitude", "N/A"),
-                "latitude": res.get("latitude", "N/A"),
-                "european_electoral_region": res.get("european_electoral_region", "N/A"),
-                "primary_care_trust": res.get("primary_care_trust", "N/A"),
-                "region": res.get("region", "N/A"),
+                "admin_ward": res.get("admin_ward", "N/A"),
+                "admin_district": res.get("admin_district", "N/A"),
+                "admin_county": res.get("admin_county", "N/A"),
+                "parish": res.get("parish", "N/A"),
+                "parliamentary_constituency": res.get("parliamentary_constituency", "N/A"),
+                "ccg": res.get("ccg", "N/A"),
+                "ced": res.get("ced", "N/A"),
+                "nuts": res.get("nuts", "N/A"),
                 "lsoa": res.get("lsoa", "N/A"),
                 "msoa": res.get("msoa", "N/A"),
-                "incode": res.get("incode", "N/A"),
-                "outcode": res.get("outcode", "N/A"),
-                "parliamentary_constituency": res.get("parliamentary_constituency", "N/A"),
-                "parliamentary_constituency_2024": res.get("parliamentary_constituency_2024", "N/A"),
-                "admin_district": res.get("admin_district", "N/A"),
-                "parish": res.get("parish", "N/A"),
-                "admin_county": res.get("admin_county", "N/A"),
-                "date_of_introduction": res.get("date_of_introduction", "N/A"),
-                "admin_ward": res.get("admin_ward", "N/A"),
-                "ced": res.get("ced", "N/A"),
-                "ccg": res.get("ccg", "N/A"),
-                "nuts": res.get("nuts", "N/A"),
-                "pfa": res.get("pfa", "N/A"),
-                "codes": res.get("codes", {})
+                "region": res.get("region", "N/A"),
+                "country": res.get("country", "N/A")
             }
     except Exception as e:
         st.warning(f"Postcode API error: {e}")
     return {
-        "postcode": "N/A", "quality": "N/A", "eastings": "N/A", "northings": "N/A",
-        "country": "N/A", "nhs_ha": "N/A", "longitude": "N/A", "latitude": "N/A",
-        "european_electoral_region": "N/A", "primary_care_trust": "N/A", "region": "N/A",
-        "lsoa": "N/A", "msoa": "N/A", "incode": "N/A", "outcode": "N/A",
-        "parliamentary_constituency": "N/A", "parliamentary_constituency_2024": "N/A",
-        "admin_district": "N/A", "parish": "N/A", "admin_county": "N/A",
-        "date_of_introduction": "N/A", "admin_ward": "N/A", "ced": "N/A",
-        "ccg": "N/A", "nuts": "N/A", "pfa": "N/A", "codes": {}
+        "postcode": "N/A", "admin_ward": "N/A", "admin_district": "N/A",
+        "admin_county": "N/A", "parish": "N/A", "parliamentary_constituency": "N/A",
+        "ccg": "N/A", "ced": "N/A", "nuts": "N/A", "lsoa": "N/A", "msoa": "N/A",
+        "region": "N/A", "country": "N/A"
     }
 
 @st.cache_data
@@ -584,20 +510,12 @@ def process_site(lat, lon, fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw,
     with st.spinner(f"Processing site at {lat}, {lon}..."):
         result = {
             "latitude": lat, "longitude": lon, "easting": None, "northing": None,
-            "elevation": "N/A", "postcode": "N/A", "ward": "N/A", "district": "N/A", 
+            "elevation": "N/A", "postcode": "N/A", "ward": "N/A", "district": "N/A",
+            "admin_county": "N/A", "parish": "N/A", "parliamentary_constituency": "N/A",
+            "ccg": "N/A", "ced": "N/A", "nuts": "N/A", "lsoa": "N/A", "msoa": "N/A",
+            "postcode_region": "N/A", "postcode_country": "N/A",
             "street": "N/A", "street_number": "N/A", "neighbourhood": "N/A", "city": "N/A",
             "county": "N/A", "region": "N/A", "country": "N/A", "formatted_address": "N/A",
-            # Postcode.io comprehensive data
-            "postcode_quality": "N/A", "postcode_eastings": "N/A", "postcode_northings": "N/A",
-            "postcode_country": "N/A", "nhs_ha": "N/A", "postcode_longitude": "N/A", 
-            "postcode_latitude": "N/A", "european_electoral_region": "N/A", 
-            "primary_care_trust": "N/A", "postcode_region": "N/A", "lsoa": "N/A", 
-            "msoa": "N/A", "incode": "N/A", "outcode": "N/A", 
-            "parliamentary_constituency": "N/A", "parliamentary_constituency_2024": "N/A",
-            "admin_district": "N/A", "parish": "N/A", "admin_county": "N/A",
-            "date_of_introduction": "N/A", "admin_ward": "N/A", "ced": "N/A",
-            "ccg": "N/A", "nuts": "N/A", "pfa": "N/A", "postcode_codes": {},
-            # Other data
             "fast_chargers": fast, "rapid_chargers": rapid, "ultra_chargers": ultra,
             "required_kva": 0, "traffic_speed": None, "traffic_freeflow": None,
             "traffic_congestion": "N/A", "amenities": "N/A", "amenities_summary": "N/A",
@@ -617,44 +535,25 @@ def process_site(lat, lon, fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw,
             result["northing"] = northing
             result["required_kva"] = calculate_kva(fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw)
             
-            # Get elevation data
             elevation = get_elevation_data(lat, lon)
             result["elevation"] = elevation
             
-            # Get aerial view URL
             result["aerial_view_url"] = get_aerial_view_url(lat, lon)
             
-            # Get comprehensive postcode info
             postcode_data = get_postcode_info(lat, lon)
-            result["postcode"] = postcode_data.get("postcode", "N/A")
-            result["ward"] = postcode_data.get("admin_ward", "N/A")
-            result["district"] = postcode_data.get("admin_district", "N/A")
-            result["postcode_quality"] = postcode_data.get("quality", "N/A")
-            result["postcode_eastings"] = postcode_data.get("eastings", "N/A")
-            result["postcode_northings"] = postcode_data.get("northings", "N/A")
-            result["postcode_country"] = postcode_data.get("country", "N/A")
-            result["nhs_ha"] = postcode_data.get("nhs_ha", "N/A")
-            result["postcode_longitude"] = postcode_data.get("longitude", "N/A")
-            result["postcode_latitude"] = postcode_data.get("latitude", "N/A")
-            result["european_electoral_region"] = postcode_data.get("european_electoral_region", "N/A")
-            result["primary_care_trust"] = postcode_data.get("primary_care_trust", "N/A")
-            result["postcode_region"] = postcode_data.get("region", "N/A")
-            result["lsoa"] = postcode_data.get("lsoa", "N/A")
-            result["msoa"] = postcode_data.get("msoa", "N/A")
-            result["incode"] = postcode_data.get("incode", "N/A")
-            result["outcode"] = postcode_data.get("outcode", "N/A")
-            result["parliamentary_constituency"] = postcode_data.get("parliamentary_constituency", "N/A")
-            result["parliamentary_constituency_2024"] = postcode_data.get("parliamentary_constituency_2024", "N/A")
-            result["admin_district"] = postcode_data.get("admin_district", "N/A")
-            result["parish"] = postcode_data.get("parish", "N/A")
-            result["admin_county"] = postcode_data.get("admin_county", "N/A")
-            result["date_of_introduction"] = postcode_data.get("date_of_introduction", "N/A")
-            result["admin_ward"] = postcode_data.get("admin_ward", "N/A")
-            result["ced"] = postcode_data.get("ced", "N/A")
-            result["ccg"] = postcode_data.get("ccg", "N/A")
-            result["nuts"] = postcode_data.get("nuts", "N/A")
-            result["pfa"] = postcode_data.get("pfa", "N/A")
-            result["postcode_codes"] = postcode_data.get("codes", {})
+            result["postcode"] = postcode_data["postcode"]
+            result["ward"] = postcode_data["admin_ward"]
+            result["district"] = postcode_data["admin_district"]
+            result["admin_county"] = postcode_data["admin_county"]
+            result["parish"] = postcode_data["parish"]
+            result["parliamentary_constituency"] = postcode_data["parliamentary_constituency"]
+            result["ccg"] = postcode_data["ccg"]
+            result["ced"] = postcode_data["ced"]
+            result["nuts"] = postcode_data["nuts"]
+            result["lsoa"] = postcode_data["lsoa"]
+            result["msoa"] = postcode_data["msoa"]
+            result["postcode_region"] = postcode_data["region"]
+            result["postcode_country"] = postcode_data["country"]
 
             geo = get_geocode_details(lat, lon)
             result.update({k: geo.get(k, "N/A") for k in ["street", "street_number", "neighbourhood", 
@@ -917,47 +816,18 @@ with tab1:
             st.write(f"**Postcode:** {site.get('postcode', 'N/A')}")
             st.write(f"**Ward:** {site.get('ward', 'N/A')}")
             st.write(f"**District:** {site.get('district', 'N/A')}")
+            st.write(f"**County:** {site.get('admin_county', 'N/A')}")
+            st.write(f"**Parish:** {site.get('parish', 'N/A')}")
+            st.write(f"**Parliamentary Constituency:** {site.get('parliamentary_constituency', 'N/A')}")
+            st.write(f"**CCG:** {site.get('ccg', 'N/A')}")
+            st.write(f"**CED:** {site.get('ced', 'N/A')}")
+            st.write(f"**NUTS:** {site.get('nuts', 'N/A')}")
+            st.write(f"**LSOA:** {site.get('lsoa', 'N/A')}")
+            st.write(f"**MSOA:** {site.get('msoa', 'N/A')}")
+            st.write(f"**Region:** {site.get('postcode_region', 'N/A')}")
+            st.write(f"**Country:** {site.get('postcode_country', 'N/A')}")
             st.write(f"**Elevation:** {site.get('elevation', 'N/A')} meters above sea level")
             st.write(f"**British Grid:** {site.get('easting', 'N/A')}, {site.get('northing', 'N/A')}")
-            
-            # Add comprehensive Postcode.io data in an expander
-            with st.expander("📍 View All Postcode.io Details"):
-                st.write("**Administrative Areas:**")
-                st.write(f"- Admin District: {site.get('admin_district', 'N/A')}")
-                st.write(f"- Admin Ward: {site.get('admin_ward', 'N/A')}")
-                st.write(f"- Admin County: {site.get('admin_county', 'N/A')}")
-                st.write(f"- Parish: {site.get('parish', 'N/A')}")
-                st.write(f"- Region: {site.get('postcode_region', 'N/A')}")
-                st.write(f"- Country: {site.get('postcode_country', 'N/A')}")
-                
-                st.write("**Parliamentary & Electoral:**")
-                st.write(f"- Parliamentary Constituency: {site.get('parliamentary_constituency', 'N/A')}")
-                st.write(f"- Parliamentary Constituency 2024: {site.get('parliamentary_constituency_2024', 'N/A')}")
-                st.write(f"- European Electoral Region: {site.get('european_electoral_region', 'N/A')}")
-                st.write(f"- County Electoral Division (CED): {site.get('ced', 'N/A')}")
-                
-                st.write("**Healthcare:**")
-                st.write(f"- NHS Health Authority: {site.get('nhs_ha', 'N/A')}")
-                st.write(f"- Primary Care Trust: {site.get('primary_care_trust', 'N/A')}")
-                st.write(f"- Clinical Commissioning Group (CCG): {site.get('ccg', 'N/A')}")
-                
-                st.write("**Statistical Areas:**")
-                st.write(f"- LSOA (Lower Layer Super Output Area): {site.get('lsoa', 'N/A')}")
-                st.write(f"- MSOA (Middle Layer Super Output Area): {site.get('msoa', 'N/A')}")
-                st.write(f"- NUTS (Nomenclature of Territorial Units): {site.get('nuts', 'N/A')}")
-                
-                st.write("**Other Information:**")
-                st.write(f"- Police Force Area (PFA): {site.get('pfa', 'N/A')}")
-                st.write(f"- Incode: {site.get('incode', 'N/A')}")
-                st.write(f"- Outcode: {site.get('outcode', 'N/A')}")
-                st.write(f"- Quality: {site.get('postcode_quality', 'N/A')}")
-                st.write(f"- Date of Introduction: {site.get('date_of_introduction', 'N/A')}")
-                
-                if site.get('postcode_codes'):
-                    st.write("**Official Codes:**")
-                    codes = site.get('postcode_codes', {})
-                    for code_key, code_val in codes.items():
-                        st.write(f"- {code_key}: {code_val}")
 
         with detail_tabs[1]:
             st.write(f"**Fast Chargers:** {site.get('fast_chargers', 0)} × {fast_kw}kW")
@@ -1065,7 +935,6 @@ with tab1:
                         use_container_width=True)
                 st.caption("High-resolution satellite imagery from Google Maps")
                 
-                # Add embed option for aerial view
                 use_embed_aerial = st.checkbox("Use Interactive Google Maps Embed (Satellite)", value=False, 
                                               key="single_aerial_embed", help="View in interactive satellite mode")
                 if use_embed_aerial:
@@ -1103,39 +972,16 @@ with tab1:
             "Easting": site.get("easting", "N/A"), "Northing": site.get("northing", "N/A"),
             "Elevation (m)": site.get("elevation", "N/A"),
             "Postcode": site.get("postcode", "N/A"), "Address": site.get("formatted_address", "N/A"),
-            # Postcode.io comprehensive data
-            "Postcode Quality": site.get("postcode_quality", "N/A"),
-            "Postcode Eastings": site.get("postcode_eastings", "N/A"),
-            "Postcode Northings": site.get("postcode_northings", "N/A"),
-            "Postcode Country": site.get("postcode_country", "N/A"),
-            "NHS Health Authority": site.get("nhs_ha", "N/A"),
-            "Postcode Longitude": site.get("postcode_longitude", "N/A"),
-            "Postcode Latitude": site.get("postcode_latitude", "N/A"),
-            "European Electoral Region": site.get("european_electoral_region", "N/A"),
-            "Primary Care Trust": site.get("primary_care_trust", "N/A"),
-            "Postcode Region": site.get("postcode_region", "N/A"),
-            "LSOA": site.get("lsoa", "N/A"),
-            "MSOA": site.get("msoa", "N/A"),
-            "Incode": site.get("incode", "N/A"),
-            "Outcode": site.get("outcode", "N/A"),
+            "Ward": site.get("ward", "N/A"), "District": site.get("district", "N/A"),
+            "Admin County": site.get("admin_county", "N/A"), "Parish": site.get("parish", "N/A"),
             "Parliamentary Constituency": site.get("parliamentary_constituency", "N/A"),
-            "Parliamentary Constituency 2024": site.get("parliamentary_constituency_2024", "N/A"),
-            "Admin District": site.get("admin_district", "N/A"),
-            "Parish": site.get("parish", "N/A"),
-            "Admin County": site.get("admin_county", "N/A"),
-            "Date of Introduction": site.get("date_of_introduction", "N/A"),
-            "Admin Ward": site.get("admin_ward", "N/A"),
-            "CED": site.get("ced", "N/A"),
-            "CCG": site.get("ccg", "N/A"),
-            "NUTS": site.get("nuts", "N/A"),
-            "PFA": site.get("pfa", "N/A"),
-            # Charger data
-            "Fast Chargers": site.get("fast_chargers", 0), 
-            "Rapid Chargers": site.get("rapid_chargers", 0),
-            "Ultra Chargers": site.get("ultra_chargers", 0), 
-            "Required kVA": site.get("required_kva", "N/A"),
-            "Road Name": site.get("snapped_road_name", "Unknown"), 
-            "Road Type": site.get("snapped_road_type", "Unknown"),
+            "CCG": site.get("ccg", "N/A"), "CED": site.get("ced", "N/A"),
+            "NUTS": site.get("nuts", "N/A"), "LSOA": site.get("lsoa", "N/A"),
+            "MSOA": site.get("msoa", "N/A"), "Region": site.get("postcode_region", "N/A"),
+            "Country": site.get("postcode_country", "N/A"),
+            "Fast Chargers": site.get("fast_chargers", 0), "Rapid Chargers": site.get("rapid_chargers", 0),
+            "Ultra Chargers": site.get("ultra_chargers", 0), "Required kVA": site.get("required_kva", "N/A"),
+            "Road Name": site.get("snapped_road_name", "Unknown"), "Road Type": site.get("snapped_road_type", "Unknown"),
             "Traffic Congestion": site.get("traffic_congestion", "N/A"),
             "Competitor EV Count": site.get("competitor_ev_count", 0),
             "Competitor Names": site.get("competitor_ev_names", "None"),
@@ -1153,7 +999,6 @@ with tab2:
     st.subheader("📁 Batch Site Processing")
     st.write("Upload a CSV file with columns: latitude, longitude, fast_chargers, rapid_chargers, ultra_chargers")
     
-    # Add template download button
     template_csv = create_csv_template()
     st.download_button(
         label="📥 Download Template CSV",
@@ -1225,7 +1070,6 @@ with tab2:
                                          help="Toggle between interactive Folium map and Google Maps Embed")
         
         if use_embed_batch:
-            # For batch, use the first site's location for the embed view
             if results:
                 first_site = results[0]
                 st.components.v1.html(get_embed_map_html(first_site["latitude"], first_site["longitude"], mode="place"), height=600)
@@ -1239,7 +1083,6 @@ with tab2:
             if batch_map:
                 st_folium(batch_map, width=900, height=600)
         
-        # Add Aerial Views section for batch
         st.subheader("🛰️ Aerial Views (All Sites)")
         show_aerial_views = st.checkbox("Show Aerial Views for All Sites", value=False, key="batch_aerial_toggle")
         
@@ -1266,6 +1109,13 @@ with tab2:
                 "Easting": site.get("easting", "N/A"), "Northing": site.get("northing", "N/A"),
                 "Elevation (m)": site.get("elevation", "N/A"),
                 "Postcode": site.get("postcode", "N/A"), "Address": site.get("formatted_address", "N/A"),
+                "Ward": site.get("ward", "N/A"), "District": site.get("district", "N/A"),
+                "Admin County": site.get("admin_county", "N/A"), "Parish": site.get("parish", "N/A"),
+                "Parliamentary Constituency": site.get("parliamentary_constituency", "N/A"),
+                "CCG": site.get("ccg", "N/A"), "CED": site.get("ced", "N/A"),
+                "NUTS": site.get("nuts", "N/A"), "LSOA": site.get("lsoa", "N/A"),
+                "MSOA": site.get("msoa", "N/A"), "Region": site.get("postcode_region", "N/A"),
+                "Country": site.get("postcode_country", "N/A"),
                 "Fast Chargers": site.get("fast_chargers", 0), "Rapid Chargers": site.get("rapid_chargers", 0),
                 "Ultra Chargers": site.get("ultra_chargers", 0), "Required kVA": site.get("required_kva", "N/A"),
                 "Road Name": site.get("snapped_road_name", "Unknown"), "Road Type": site.get("snapped_road_type", "Unknown"),
@@ -1400,7 +1250,6 @@ with tab2:
                 with elev_col3:
                     st.metric("Min Elevation", f"{min(elevation_values):.2f} m")
                 
-                # Create elevation distribution table
                 st.write("**Elevation by Site:**")
                 elevation_df = pd.DataFrame([
                     {"Site": i+1, "Address": s.get("formatted_address", "Unknown")[:50], 
