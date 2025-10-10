@@ -542,48 +542,32 @@ def process_site(lat, lon, fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw,
             
             result["aerial_view_url"] = get_aerial_view_url(lat, lon)
             
-            # Get address and postcode from Google Geocoding API first
+            # PRIORITY 1: Get address and postcode from Google Geocoding API (PRIMARY SOURCE)
             geo = get_geocode_details(lat, lon)
             result.update({k: geo.get(k, "N/A") for k in ["street", "street_number", "neighbourhood", 
                           "city", "county", "region", "country", "formatted_address", "postcode"]})
             
-            # Then get additional postcode data from postcodes.io using the postcode from Google
+            # Store Google's postcode separately to ensure it's not overwritten
             google_postcode = geo.get("postcode", "N/A")
-            if google_postcode != "N/A":
-                # Try to get more details from postcodes.io using the Google postcode
-                postcode_data = get_postcode_info(lat, lon)
-                # Update ward, district and other fields from postcodes.io
-                result["ward"] = postcode_data["admin_ward"]
-                result["district"] = postcode_data["admin_district"]
-                result["admin_county"] = postcode_data["admin_county"]
-                result["parish"] = postcode_data["parish"]
-                result["parliamentary_constituency"] = postcode_data["parliamentary_constituency"]
-                result["ccg"] = postcode_data["ccg"]
-                result["ced"] = postcode_data["ced"]
-                result["nuts"] = postcode_data["nuts"]
-                result["lsoa"] = postcode_data["lsoa"]
-                result["msoa"] = postcode_data["msoa"]
-                result["postcode_region"] = postcode_data["region"]
-                result["postcode_country"] = postcode_data["country"]
-                # If postcodes.io has a postcode, use it, otherwise keep Google's
-                if postcode_data["postcode"] != "N/A":
-                    result["postcode"] = postcode_data["postcode"]
-            else:
-                # If Google didn't provide a postcode, try postcodes.io
-                postcode_data = get_postcode_info(lat, lon)
-                result["postcode"] = postcode_data["postcode"]
-                result["ward"] = postcode_data["admin_ward"]
-                result["district"] = postcode_data["admin_district"]
-                result["admin_county"] = postcode_data["admin_county"]
-                result["parish"] = postcode_data["parish"]
-                result["parliamentary_constituency"] = postcode_data["parliamentary_constituency"]
-                result["ccg"] = postcode_data["ccg"]
-                result["ced"] = postcode_data["ced"]
-                result["nuts"] = postcode_data["nuts"]
-                result["lsoa"] = postcode_data["lsoa"]
-                result["msoa"] = postcode_data["msoa"]
-                result["postcode_region"] = postcode_data["region"]
-                result["postcode_country"] = postcode_data["country"]
+            
+            # PRIORITY 2: Get UK administrative data from postcodes.io (ONLY for ward, district, etc.)
+            postcode_data = get_postcode_info(lat, lon)
+            # Only update UK administrative fields, NOT the postcode or address
+            result["ward"] = postcode_data["admin_ward"]
+            result["district"] = postcode_data["admin_district"]
+            result["admin_county"] = postcode_data["admin_county"]
+            result["parish"] = postcode_data["parish"]
+            result["parliamentary_constituency"] = postcode_data["parliamentary_constituency"]
+            result["ccg"] = postcode_data["ccg"]
+            result["ced"] = postcode_data["ced"]
+            result["nuts"] = postcode_data["nuts"]
+            result["lsoa"] = postcode_data["lsoa"]
+            result["msoa"] = postcode_data["msoa"]
+            result["postcode_region"] = postcode_data["region"]
+            result["postcode_country"] = postcode_data["country"]
+            
+            # CRITICAL: Always keep Google's postcode as the final value
+            result["postcode"] = google_postcode
 
             traffic = get_tomtom_traffic(lat, lon)
             result.update({"traffic_speed": traffic["speed"], "traffic_freeflow": traffic["freeFlow"],
@@ -1149,20 +1133,37 @@ with tab2:
         export_rows = []
         for site in results:
             export_rows.append({
-                "Latitude": site["latitude"], "Longitude": site["longitude"],
-                "Easting": site.get("easting", "N/A"), "Northing": site.get("northing", "N/A"),
+                "Latitude": site["latitude"], 
+                "Longitude": site["longitude"],
+                "Easting": site.get("easting", "N/A"), 
+                "Northing": site.get("northing", "N/A"),
                 "Elevation (m)": site.get("elevation", "N/A"),
-                "Postcode": site.get("postcode", "N/A"), "Address": site.get("formatted_address", "N/A"),
-                "Ward": site.get("ward", "N/A"), "District": site.get("district", "N/A"),
-                "Admin County": site.get("admin_county", "N/A"), "Parish": site.get("parish", "N/A"),
+                "Postcode": site.get("postcode", "N/A"),
+                "Address": site.get("formatted_address", "N/A"),
+                "Street": site.get("street", "N/A"),
+                "Street Number": site.get("street_number", "N/A"),
+                "City": site.get("city", "N/A"),
+                "County": site.get("county", "N/A"),
+                "Region": site.get("region", "N/A"),
+                "Country": site.get("country", "N/A"),
+                "Ward": site.get("ward", "N/A"), 
+                "District": site.get("district", "N/A"),
+                "Admin County": site.get("admin_county", "N/A"), 
+                "Parish": site.get("parish", "N/A"),
                 "Parliamentary Constituency": site.get("parliamentary_constituency", "N/A"),
-                "CCG": site.get("ccg", "N/A"), "CED": site.get("ced", "N/A"),
-                "NUTS": site.get("nuts", "N/A"), "LSOA": site.get("lsoa", "N/A"),
-                "MSOA": site.get("msoa", "N/A"), "Region": site.get("postcode_region", "N/A"),
-                "Country": site.get("postcode_country", "N/A"),
-                "Fast Chargers": site.get("fast_chargers", 0), "Rapid Chargers": site.get("rapid_chargers", 0),
-                "Ultra Chargers": site.get("ultra_chargers", 0), "Required kVA": site.get("required_kva", "N/A"),
-                "Road Name": site.get("snapped_road_name", "Unknown"), "Road Type": site.get("snapped_road_type", "Unknown"),
+                "CCG": site.get("ccg", "N/A"), 
+                "CED": site.get("ced", "N/A"),
+                "NUTS": site.get("nuts", "N/A"), 
+                "LSOA": site.get("lsoa", "N/A"),
+                "MSOA": site.get("msoa", "N/A"), 
+                "Postcode Region": site.get("postcode_region", "N/A"),
+                "Postcode Country": site.get("postcode_country", "N/A"),
+                "Fast Chargers": site.get("fast_chargers", 0), 
+                "Rapid Chargers": site.get("rapid_chargers", 0),
+                "Ultra Chargers": site.get("ultra_chargers", 0), 
+                "Required kVA": site.get("required_kva", "N/A"),
+                "Road Name": site.get("snapped_road_name", "Unknown"), 
+                "Road Type": site.get("snapped_road_type", "Unknown"),
                 "Traffic Congestion": site.get("traffic_congestion", "N/A"),
                 "Competitor EV Count": site.get("competitor_ev_count", 0),
                 "Competitor Names": site.get("competitor_ev_names", "None"),
