@@ -1,4 +1,14 @@
+import streamlit as st
+import pandas as pd
+import requests
+import folium
+from streamlit_folium import st_folium
+from pyproj import Transformer
+import time
 
+# API KEYS
+GOOGLE_API_KEY = st.secrets["google_api_key"]
+TOMTOM_API_KEY = st.secrets.get("tomtom_api_key", "")
 
 # UTILITY FUNCTIONS
 
