@@ -5,6 +5,7 @@ import folium
 from streamlit_folium import st_folium
 from pyproj import Transformer
 import time
+import io
 
 # API KEYS
 GOOGLE_API_KEY = st.secrets["google_api_key"]
@@ -109,6 +110,49 @@ def create_bar_chart_data(brands_dict):
     except Exception as e:
         st.warning(f"Could not create bar chart: {e}")
         return None
+
+def create_csv_template():
+    """Create a CSV template for batch processing"""
+    template_data = {
+        "latitude": [51.5074, 51.5155, 51.5203],
+        "longitude": [-0.1278, -0.0922, -0.0740],
+        "fast_chargers": [2, 4, 3],
+        "rapid_chargers": [2, 1, 2],
+        "ultra_chargers": [1, 0, 1]
+    }
+    df_template = pd.DataFrame(template_data)
+    return df_template.to_csv(index=False).encode('utf-8')
+
+@st.cache_data
+def get_elevation_data(lat, lon):
+    """Get elevation data using Google Maps Elevation API"""
+    try:
+        url = "https://maps.googleapis.com/maps/api/elevation/json"
+        params = {"locations": f"{lat},{lon}", "key": GOOGLE_API_KEY}
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == "OK" and data.get("results"):
+                elevation = data["results"][0].get("elevation")
+                return round(elevation, 2) if elevation is not None else "N/A"
+    except Exception as e:
+        st.warning(f"Elevation API error: {e}")
+    return "N/A"
+
+def get_aerial_view_url(lat, lon, zoom=18, size="600x400"):
+    """Generate Google Maps Static API URL for aerial view"""
+    return (f"https://maps.googleapis.com/maps/api/staticmap"
+            f"?center={lat},{lon}&zoom={zoom}&size={size}"
+            f"&maptype=satellite&key={GOOGLE_API_KEY}")
+
+def get_embed_map_html(lat, lon, mode="place"):
+    """Generate Google Maps Embed API HTML iframe"""
+    if mode == "place":
+        src = f"https://www.google.com/maps/embed/v1/place?key={GOOGLE_API_KEY}&q={lat},{lon}&zoom=15"
+    else:  # satellite
+        src = f"https://www.google.com/maps/embed/v1/view?key={GOOGLE_API_KEY}&center={lat},{lon}&zoom=18&maptype=satellite"
+    
+    return f'<iframe width="100%" height="450" frameborder="0" style="border:0" src="{src}" allowfullscreen></iframe>'
 
 @st.cache_data
 def get_postcode_info(lat, lon):
@@ -447,8 +491,8 @@ def process_site(lat, lon, fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw,
     with st.spinner(f"Processing site at {lat}, {lon}..."):
         result = {
             "latitude": lat, "longitude": lon, "easting": None, "northing": None,
-            "postcode": "N/A", "ward": "N/A", "district": "N/A", "street": "N/A",
-            "street_number": "N/A", "neighbourhood": "N/A", "city": "N/A",
+            "elevation": "N/A", "postcode": "N/A", "ward": "N/A", "district": "N/A", 
+            "street": "N/A", "street_number": "N/A", "neighbourhood": "N/A", "city": "N/A",
             "county": "N/A", "region": "N/A", "country": "N/A", "formatted_address": "N/A",
             "fast_chargers": fast, "rapid_chargers": rapid, "ultra_chargers": ultra,
             "required_kva": 0, "traffic_speed": None, "traffic_freeflow": None,
@@ -460,13 +504,21 @@ def process_site(lat, lon, fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw,
             "competitor_ev_count": 0, "competitor_ev_names": "None", "ev_stations_details": [],
             "street_view_image_urls": {}, "street_view_maps_link": None,
             "google_maps_link": None, "google_maps_dir_link": None, "has_street_view": False,
-            "competitor_radius": competitor_radius, "amenities_radius": amenities_radius
+            "aerial_view_url": None, "competitor_radius": competitor_radius, 
+            "amenities_radius": amenities_radius
         }
         try:
             easting, northing = convert_to_british_grid(lat, lon)
             result["easting"] = easting
             result["northing"] = northing
             result["required_kva"] = calculate_kva(fast, rapid, ultra, fast_kw, rapid_kw, ultra_kw)
+            
+            # Get elevation data
+            elevation = get_elevation_data(lat, lon)
+            result["elevation"] = elevation
+            
+            # Get aerial view URL
+            result["aerial_view_url"] = get_aerial_view_url(lat, lon)
             
             postcode, ward, district = get_postcode_info(lat, lon)
             result["postcode"] = postcode
@@ -530,6 +582,7 @@ def create_single_map(site, show_traffic=False, show_competitors=True):
     popup_content = f"""
     <b>📍 {site.get('formatted_address', 'Unknown Address')}</b><br>
     <b>🔌 Power:</b> {site.get('required_kva','N/A')} kVA<br>
+    <b>📏 Elevation:</b> {site.get('elevation','N/A')} m<br>
     <b>🛣️ Road:</b> {site.get('snapped_road_name','N/A')} ({site.get('snapped_road_type','N/A')})<br>
     <b>🚦 Traffic:</b> {site.get('traffic_congestion','N/A')}<br>
     <b>⚡ Competitor EVs:</b> {site.get('competitor_ev_count', 0)}<br>
@@ -580,6 +633,7 @@ def create_sites_only_map(sites, show_traffic=False):
         popup_content = f"""
         <b>📍 Site {i+1}:</b> {site.get('formatted_address','Unknown Address')}<br>
         <b>🔌 Power:</b> {site.get('required_kva','N/A')} kVA<br>
+        <b>📏 Elevation:</b> {site.get('elevation','N/A')} m<br>
         <b>🛣️ Road:</b> {site.get('snapped_road_name','N/A')} ({site.get('snapped_road_type','N/A')})<br>
         <b>🚦 Traffic:</b> {site.get('traffic_congestion','N/A')}<br>
         <b>🏪 Nearby:</b> {site.get('amenities_summary','N/A')[:100]}{'...' if len(str(site.get('amenities_summary',''))) > 100 else ''}<br>
@@ -611,6 +665,7 @@ def create_batch_map(sites, show_traffic=False):
         popup_content = f"""
         <b>📍 Site {i+1}:</b> {site.get('formatted_address','Unknown Address')}<br>
         <b>🔌 Power:</b> {site.get('required_kva','N/A')} kVA<br>
+        <b>📏 Elevation:</b> {site.get('elevation','N/A')} m<br>
         <b>🛣️ Road:</b> {site.get('snapped_road_name','N/A')} ({site.get('snapped_road_type','N/A')})<br>
         <b>🚦 Traffic:</b> {site.get('traffic_congestion','N/A')}<br>
         <b>⚡ Competitor EVs:</b> {site.get('competitor_ev_count', 0)}<br>
@@ -709,25 +764,29 @@ with tab1:
             if site.get("street_view_maps_link"):
                 st.link_button("🚶 Open Street View", site["street_view_maps_link"])
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             st.metric("Required kVA", site.get("required_kva", "N/A"))
         with col2:
-            st.metric("Snapped Road Type", site.get("snapped_road_type", "Unknown"))
+            st.metric("Elevation (m)", site.get("elevation", "N/A"))
         with col3:
-            st.metric("Traffic Level", site.get("traffic_congestion", "N/A"))
+            st.metric("Road Type", site.get("snapped_road_type", "Unknown"))
         with col4:
+            st.metric("Traffic Level", site.get("traffic_congestion", "N/A"))
+        with col5:
             st.metric("Competitor EVs", site.get("competitor_ev_count", 0))
 
         st.subheader("📋 Detailed Site Information")
         detail_tabs = st.tabs(["🏠 Location", "🔌 Power", "🛣️ Road Info", "🚦 Traffic", 
-                              "🏪 Amenities", "📊 Amenities Mix", "⚡ EV Competitors", "🗺️ Site Map", "🚶 Street View"])
+                              "🏪 Amenities", "📊 Amenities Mix", "⚡ EV Competitors", 
+                              "🗺️ Site Map", "🛰️ Aerial View", "🚶 Street View"])
 
         with detail_tabs[0]:
             st.write(f"**Address:** {site.get('formatted_address', 'N/A')}")
             st.write(f"**Postcode:** {site.get('postcode', 'N/A')}")
             st.write(f"**Ward:** {site.get('ward', 'N/A')}")
             st.write(f"**District:** {site.get('district', 'N/A')}")
+            st.write(f"**Elevation:** {site.get('elevation', 'N/A')} meters above sea level")
             st.write(f"**British Grid:** {site.get('easting', 'N/A')}, {site.get('northing', 'N/A')}")
 
         with detail_tabs[1]:
@@ -814,14 +873,37 @@ with tab1:
 
         with detail_tabs[7]:
             st.write("**Interactive Site Map:**")
-            map_view_type = st.radio("Select Map View:", ["Site Only", "Site + Competitors"], 
-                                    horizontal=True, key="single_site_map_toggle")
+            map_cols = st.columns([3, 2])
+            with map_cols[0]:
+                map_view_type = st.radio("Select Map View:", ["Site Only", "Site + Competitors"], 
+                                        horizontal=True, key="single_site_map_toggle")
+            with map_cols[1]:
+                use_embed_map = st.checkbox("Use Google Maps Embed", value=False, key="single_embed_toggle",
+                                           help="Toggle between interactive Folium map and Google Maps Embed")
             
-            show_competitors_map = (map_view_type == "Site + Competitors")
-            site_map = create_single_map(site, show_traffic_single, show_competitors=show_competitors_map)
-            st_folium(site_map, width=700, height=500)
+            if use_embed_map:
+                st.components.v1.html(get_embed_map_html(site["latitude"], site["longitude"], mode="place"), height=450)
+            else:
+                show_competitors_map = (map_view_type == "Site + Competitors")
+                site_map = create_single_map(site, show_traffic_single, show_competitors=show_competitors_map)
+                st_folium(site_map, width=700, height=500)
 
         with detail_tabs[8]:
+            st.write("**Satellite Aerial View:**")
+            if site.get("aerial_view_url"):
+                st.image(site["aerial_view_url"], caption=f"Aerial View: {site.get('formatted_address', 'Site Location')}", 
+                        use_container_width=True)
+                st.caption("High-resolution satellite imagery from Google Maps")
+                
+                # Add embed option for aerial view
+                use_embed_aerial = st.checkbox("Use Interactive Google Maps Embed (Satellite)", value=False, 
+                                              key="single_aerial_embed", help="View in interactive satellite mode")
+                if use_embed_aerial:
+                    st.components.v1.html(get_embed_map_html(site["latitude"], site["longitude"], mode="satellite"), height=450)
+            else:
+                st.info("Aerial view not available for this location.")
+
+        with detail_tabs[9]:
             if site.get("has_street_view") and site.get("street_view_image_urls"):
                 st.write("**Street View - 4 Directional Views:**")
                 image_urls = site.get("street_view_image_urls", {})
@@ -849,6 +931,7 @@ with tab1:
         export_data = {
             "Latitude": site["latitude"], "Longitude": site["longitude"],
             "Easting": site.get("easting", "N/A"), "Northing": site.get("northing", "N/A"),
+            "Elevation (m)": site.get("elevation", "N/A"),
             "Postcode": site.get("postcode", "N/A"), "Address": site.get("formatted_address", "N/A"),
             "Fast Chargers": site.get("fast_chargers", 0), "Rapid Chargers": site.get("rapid_chargers", 0),
             "Ultra Chargers": site.get("ultra_chargers", 0), "Required kVA": site.get("required_kva", "N/A"),
@@ -858,7 +941,8 @@ with tab1:
             "Competitor Names": site.get("competitor_ev_names", "None"),
             "Amenities": site.get("amenities_summary", "N/A"),
             "Google Maps Link": site.get("google_maps_link", ""),
-            "Street View Link": site.get("street_view_maps_link", "")
+            "Street View Link": site.get("street_view_maps_link", ""),
+            "Aerial View Link": site.get("aerial_view_url", "")
         }
         df_export = pd.DataFrame([export_data])
         csv = df_export.to_csv(index=False).encode('utf-8')
@@ -868,6 +952,16 @@ with tab1:
 with tab2:
     st.subheader("📁 Batch Site Processing")
     st.write("Upload a CSV file with columns: latitude, longitude, fast_chargers, rapid_chargers, ultra_chargers")
+    
+    # Add template download button
+    template_csv = create_csv_template()
+    st.download_button(
+        label="📥 Download Template CSV",
+        data=template_csv,
+        file_name="ev_sites_template.csv",
+        mime="text/csv",
+        help="Download a sample CSV template with the correct format"
+    )
     
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     
@@ -923,15 +1017,46 @@ with tab2:
             st.metric("Avg Competitors/Site", f"{avg_competitors:.1f}")
         
         st.subheader("🗺️ All Sites Map")
-        map_type = st.radio("Select Map Type:", ["Sites Only", "Sites with Competitors"], horizontal=True)
+        map_cols = st.columns([3, 2])
+        with map_cols[0]:
+            map_type = st.radio("Select Map Type:", ["Sites Only", "Sites with Competitors"], horizontal=True)
+        with map_cols[1]:
+            use_embed_batch = st.checkbox("Use Google Maps Embed", value=False, key="batch_embed_toggle",
+                                         help="Toggle between interactive Folium map and Google Maps Embed")
         
-        if map_type == "Sites Only":
-            batch_map = create_sites_only_map(results, show_traffic_batch)
+        if use_embed_batch:
+            # For batch, use the first site's location for the embed view
+            if results:
+                first_site = results[0]
+                st.components.v1.html(get_embed_map_html(first_site["latitude"], first_site["longitude"], mode="place"), height=600)
+                st.info("Google Maps Embed shows the first site location. Use Folium map to view all sites together.")
         else:
-            batch_map = create_batch_map(results, show_traffic_batch)
+            if map_type == "Sites Only":
+                batch_map = create_sites_only_map(results, show_traffic_batch)
+            else:
+                batch_map = create_batch_map(results, show_traffic_batch)
+            
+            if batch_map:
+                st_folium(batch_map, width=900, height=600)
         
-        if batch_map:
-            st_folium(batch_map, width=900, height=600)
+        # Add Aerial Views section for batch
+        st.subheader("🛰️ Aerial Views (All Sites)")
+        show_aerial_views = st.checkbox("Show Aerial Views for All Sites", value=False, key="batch_aerial_toggle")
+        
+        if show_aerial_views:
+            st.info("Displaying satellite imagery for all processed sites")
+            cols_per_row = 2
+            for i in range(0, len(results), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for j in range(cols_per_row):
+                    if i + j < len(results):
+                        site = results[i + j]
+                        with cols[j]:
+                            st.write(f"**Site {i+j+1}:** {site.get('formatted_address', 'Unknown')}")
+                            if site.get("aerial_view_url"):
+                                st.image(site["aerial_view_url"], use_container_width=True)
+                            else:
+                                st.info("Aerial view not available")
         
         st.subheader("📥 Export Batch Results")
         export_rows = []
@@ -939,6 +1064,7 @@ with tab2:
             export_rows.append({
                 "Latitude": site["latitude"], "Longitude": site["longitude"],
                 "Easting": site.get("easting", "N/A"), "Northing": site.get("northing", "N/A"),
+                "Elevation (m)": site.get("elevation", "N/A"),
                 "Postcode": site.get("postcode", "N/A"), "Address": site.get("formatted_address", "N/A"),
                 "Fast Chargers": site.get("fast_chargers", 0), "Rapid Chargers": site.get("rapid_chargers", 0),
                 "Ultra Chargers": site.get("ultra_chargers", 0), "Required kVA": site.get("required_kva", "N/A"),
@@ -949,7 +1075,8 @@ with tab2:
                 "Amenities Total": site.get("amenities_total", 0),
                 "Amenities Summary": site.get("amenities_summary", "N/A"),
                 "Google Maps Link": site.get("google_maps_link", ""),
-                "Street View Link": site.get("street_view_maps_link", "")
+                "Street View Link": site.get("street_view_maps_link", ""),
+                "Aerial View Link": site.get("aerial_view_url", "")
             })
         
         df_batch_export = pd.DataFrame(export_rows)
@@ -958,7 +1085,8 @@ with tab2:
                           file_name="ev_batch_site_analysis.csv", mime="text/csv")
         
         st.subheader("📈 Batch Analysis")
-        analysis_tabs = st.tabs(["Road Type Distribution", "Traffic Analysis", "Competitor Analysis", "Amenities Analysis"])
+        analysis_tabs = st.tabs(["Road Type Distribution", "Traffic Analysis", "Competitor Analysis", 
+                                 "Amenities Analysis", "Elevation Analysis"])
         
         with analysis_tabs[0]:
             road_types = {}
@@ -1058,6 +1186,30 @@ with tab2:
                     st.metric("Max Amenities at One Site", max(total_amenities_list))
                 with min_col:
                     st.metric("Min Amenities at One Site", min(total_amenities_list))
+        
+        with analysis_tabs[4]:
+            st.write("**Elevation Analysis:**")
+            elevation_values = [s.get("elevation") for s in results if s.get("elevation") != "N/A" and s.get("elevation") is not None]
+            
+            if elevation_values:
+                elev_col1, elev_col2, elev_col3 = st.columns(3)
+                with elev_col1:
+                    st.metric("Average Elevation", f"{sum(elevation_values)/len(elevation_values):.2f} m")
+                with elev_col2:
+                    st.metric("Max Elevation", f"{max(elevation_values):.2f} m")
+                with elev_col3:
+                    st.metric("Min Elevation", f"{min(elevation_values):.2f} m")
+                
+                # Create elevation distribution table
+                st.write("**Elevation by Site:**")
+                elevation_df = pd.DataFrame([
+                    {"Site": i+1, "Address": s.get("formatted_address", "Unknown")[:50], 
+                     "Elevation (m)": s.get("elevation", "N/A")}
+                    for i, s in enumerate(results)
+                ])
+                st.dataframe(elevation_df, use_container_width=True)
+            else:
+                st.info("No elevation data available for the processed sites.")
 
 st.markdown("---")
 st.markdown("**🔋 Believ Site Selection Guide** | Built with Streamlit | © 2025")
