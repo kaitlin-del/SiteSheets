@@ -140,10 +140,12 @@ def get_elevation_data(lat, lon):
     return "N/A"
 
 def get_aerial_view_url(lat, lon, zoom=18, size="600x400"):
-    """Generate Google Maps Static API URL for aerial view"""
+    """Generate Google Maps Static API URL for aerial view with marker"""
     return (f"https://maps.googleapis.com/maps/api/staticmap"
             f"?center={lat},{lon}&zoom={zoom}&size={size}"
-            f"&maptype=satellite&key={GOOGLE_API_KEY}")
+            f"&maptype=satellite"
+            f"&markers=color:red%7Clabel:📍%7C{lat},{lon}"
+            f"&key={GOOGLE_API_KEY}")
 
 def get_embed_map_html(lat, lon, mode="place"):
     """Generate Google Maps Embed API HTML iframe"""
