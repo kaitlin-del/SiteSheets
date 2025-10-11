@@ -55,7 +55,7 @@ def check_password():
             st.session_state["login_attempted"] = False  # Reset for next attempt
         
         # Show test password hint
-        st.info("💡 Test password: **believ2025**")
+        # st.info("💡 Test password: **believ2025**")
             
         st.markdown("---")
         st.caption("🔒 This application is password protected to secure API resources.")
