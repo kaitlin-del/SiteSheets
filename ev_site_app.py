@@ -12,27 +12,23 @@ import hashlib
 # AUTHENTICATION SYSTEM
 # ============================================================================
 
-# Test password: "believ2025"
-
 def check_password():
     """Returns `True` if the user had the correct password."""
 
-
-    def password_entered():
-    """Checks whether a password entered by the user is correct."""
-    entered_password = st.session_state["password"]
-    
-    # Direct comparison (for testing only)
-    if entered_password == "believ2025":
-        st.session_state["password_correct"] = True
-        del st.session_state["password"]  # Don't store password
-    else:
-        st.session_state["password_correct"] = False
+    def login_clicked():
+        """Checks whether a password entered by the user is correct."""
+        entered_password = st.session_state.get("password_input", "")
+        
+        # Direct comparison (for testing only)
+        if entered_password == "believ2025":
+            st.session_state["password_correct"] = True
+        else:
+            st.session_state["password_correct"] = False
+            st.session_state["login_attempted"] = True
 
     # Return True if password is already validated
     if st.session_state.get("password_correct", False):
         return True
-    
 
     # Show login form
     st.markdown("# 🔐 Believ Site Selection Guide")
@@ -45,16 +41,21 @@ def check_password():
         st.text_input(
             "Enter Password",
             type="password",
-            on_change=password_entered,
-            key="password",
+            key="password_input",
             placeholder="Enter your password here"
         )
         
-        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+        # Login button
+        if st.button("🔓 Login", type="primary", use_container_width=True):
+            login_clicked()
+        
+        # Show error only after login attempt
+        if st.session_state.get("login_attempted", False) and not st.session_state.get("password_correct", False):
             st.error("😕 Incorrect password. Please try again.")
+            st.session_state["login_attempted"] = False  # Reset for next attempt
         
         # Show test password hint
-        #st.info("💡 Test password: **believ2025**")
+        st.info("💡 Test password: **believ2025**")
             
         st.markdown("---")
         st.caption("🔒 This application is password protected to secure API resources.")
