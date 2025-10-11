@@ -13,28 +13,26 @@ import hashlib
 # ============================================================================
 
 # Test password: "believ2025"
-# This is the SHA256 hash of "believ2025"
-# TEST_PASSWORD_HASH = "8a4c3f5e9b2d1a6c7e8f0b3d5a2c1e9f8b7a6d5c4e3f2a1b0c9d8e7f6a5b4c3d2"
-TEST_PASSWORD_HASH = "e8c3b5f8a9d2c1e4f7a6b3d8e1c9f2a5b4d7e0c3f6a9b2d5e8c1f4a7b0d3e6f9a2"
+
 def check_password():
     """Returns `True` if the user had the correct password."""
 
+
     def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        # Hash the entered password
-        entered_password = st.session_state["password"]
-        entered_hash = hashlib.sha256(entered_password.encode()).hexdigest()
-        
-        # Compare with hardcoded hash
-        if entered_hash == TEST_PASSWORD_HASH:
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store password
-        else:
-            st.session_state["password_correct"] = False
+    """Checks whether a password entered by the user is correct."""
+    entered_password = st.session_state["password"]
+    
+    # Direct comparison (for testing only)
+    if entered_password == "believ2025":
+        st.session_state["password_correct"] = True
+        del st.session_state["password"]  # Don't store password
+    else:
+        st.session_state["password_correct"] = False
 
     # Return True if password is already validated
     if st.session_state.get("password_correct", False):
         return True
+    
 
     # Show login form
     st.markdown("# 🔐 Believ Site Selection Guide")
@@ -56,7 +54,7 @@ def check_password():
             st.error("😕 Incorrect password. Please try again.")
         
         # Show test password hint
-        st.info("💡 Test password: **believ2025**")
+        #st.info("💡 Test password: **believ2025**")
             
         st.markdown("---")
         st.caption("🔒 This application is password protected to secure API resources.")
