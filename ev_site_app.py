@@ -6,6 +6,72 @@ from streamlit_folium import st_folium
 from pyproj import Transformer
 import time
 import io
+import hashlib
+
+# ============================================================================
+# AUTHENTICATION SYSTEM
+# ============================================================================
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        # Hash the entered password
+        entered_password = st.session_state["password"]
+        entered_hash = hashlib.sha256(entered_password.encode()).hexdigest()
+        
+        # Get the correct password hash from secrets
+        correct_hash = st.secrets.get("app_password_hash", "")
+        
+        if entered_hash == correct_hash:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    # Return True if password is already validated
+    if st.session_state.get("password_correct", False):
+        return True
+
+    # Show login form
+    st.markdown("# 🔐 Believ Site Selection Guide")
+    st.markdown("### Secure Access Required")
+    st.markdown("---")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        st.text_input(
+            "Enter Password",
+            type="password",
+            on_change=password_entered,
+            key="password",
+            placeholder="Enter your password here"
+        )
+        
+        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+            st.error("😕 Incorrect password. Please try again.")
+            
+        st.markdown("---")
+        st.caption("🔒 This application is password protected to secure API resources.")
+        st.caption("Contact your administrator if you need access.")
+
+    return False
+
+# ============================================================================
+# MAIN APPLICATION (Only runs if authenticated)
+# ============================================================================
+
+if not check_password():
+    st.stop()  # Stop here if not authenticated
+
+# Add logout button in sidebar
+with st.sidebar:
+    st.markdown("---")
+    if st.button("🚪 Logout", type="secondary"):
+        st.session_state["password_correct"] = False
+        st.rerun()
 
 # API KEYS
 GOOGLE_API_KEY = st.secrets["google_api_key"]
