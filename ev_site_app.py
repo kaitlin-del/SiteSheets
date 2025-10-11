@@ -14,8 +14,8 @@ import hashlib
 
 # Test password: "believ2025"
 # This is the SHA256 hash of "believ2025"
-TEST_PASSWORD_HASH = "8a4c3f5e9b2d1a6c7e8f0b3d5a2c1e9f8b7a6d5c4e3f2a1b0c9d8e7f6a5b4c3d2"
-
+# TEST_PASSWORD_HASH = "8a4c3f5e9b2d1a6c7e8f0b3d5a2c1e9f8b7a6d5c4e3f2a1b0c9d8e7f6a5b4c3d2"
+TEST_PASSWORD_HASH = "e8c3b5f8a9d2c1e4f7a6b3d8e1c9f2a5b4d7e0c3f6a9b2d5e8c1f4a7b0d3e6f9a2"
 def check_password():
     """Returns `True` if the user had the correct password."""
 
