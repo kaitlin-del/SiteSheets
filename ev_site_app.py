@@ -58,8 +58,8 @@ def check_password():
         # st.info("💡 Test password: **believ2025**")
             
         st.markdown("---")
-        st.caption("🔒 This application is password protected to secure API resources.")
-        st.caption("Contact your administrator if you need access.")
+        # st.caption("🔒 This application is password protected to secure API resources.")
+        st.caption("Contact Umapujitha.Singh@believ.com or Kaitlin.O'Neill@believ.com if you need access.")
 
     return False
 
