@@ -59,7 +59,7 @@ def check_password():
             
         st.markdown("---")
         # st.caption("🔒 This application is password protected to secure API resources.")
-        st.caption("Contact Umapujitha.Singh@believ.com or Kaitlin.O'Neill@believ.com if you need access.")
+        st.caption("Contact Umapujitha.Singh@believ.com or Kaitlin.ONeill@believ.com if you need access.")
 
     return False
 
