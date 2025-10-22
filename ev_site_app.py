@@ -688,7 +688,9 @@ def create_single_map(site, show_traffic=False, show_competitors=True):
     folium.TileLayer(tiles=f"https://mt1.google.com/vt/lyrs=m&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_API_KEY}",
                     attr="Google", name="Google Maps", overlay=False, control=True, show=True).add_to(m)
     add_google_satellite_layers(m)
+  curl -X GET "https://discover.search.hereapi.com/v1/discover?q=EV%20station&in=circle:37.7749,-122.4194;r=5000&evStation[minPower]=50.0&evStation[connectorTypeIds]=29,33&evStation[current]=DC&show=ev,eMobilityServiceProviders&limit=20&apikey=Q3moluwKOy-gpqE68c60Icgv5xJAr73JmZ2sq47lM8M"
 
+    
     popup_content = f"""
     <b>📍 {site.get('formatted_address', 'Unknown Address')}</b><br>
     <b>🔌 Power:</b> {site.get('required_kva','N/A')} kVA<br>
